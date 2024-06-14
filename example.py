@@ -1,7 +1,7 @@
 import openai
 from prompt_protector.prompt_protector import PromptProtector
 
-OPEN_AI_KEY = "sk-proj-hQ2AbhNkT8h1mVB6QO1RT3BlbkFJH1s4ksulxwed7aegduZJ"
+OPEN_AI_KEY = "{insert your openAi API key here}"
 
 
 def auditor_example():
