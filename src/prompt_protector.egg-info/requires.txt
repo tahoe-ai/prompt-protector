@@ -1,0 +1,4 @@
+openai
+asyncio
+aiohttp
+google-cloud-datastore
