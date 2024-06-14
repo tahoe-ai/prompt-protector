@@ -2,7 +2,7 @@ import aiohttp
 import json
 import openai
 import time
-from .settings import OPEN_AI_KEY, RESPONSE_SHAPE
+from .settings import OPEN_AI_KEY
 
 
 def feed_input_to_chat_gpt(input_string, last_message):
@@ -40,57 +40,6 @@ def feed_input_to_chat_gpt(input_string, last_message):
     #print(f"Time spent in initial response: {end - start}")
     #print(f"initial response: {response.choices[0].message.content}")
     return response.choices[0].message.content
-
-async def feed_input_to_auditor(text_to_audit, rule):
-    background = {
-        "role": "system",
-        "content": "You are an AI output auditor. Your responsibility is to validate a body of text (an output from another ai model) against the given set of rules."
-    }
-
-    output_format_message = {
-        "role": "system",
-        "content": RESPONSE_SHAPE
-    }
-
-    rules = {
-        "role": "system",
-        "content": f"The rule is: {rule}"
-    }
-    output = {
-        "role": "user",
-        "content": f"Text to audit: {text_to_audit}"
-    }
-    async with aiohttp.ClientSession(headers={'Authorization': 'Bearer ' + OPEN_AI_KEY}) as session:
-        response = await session.post(
-            "https://api.openai.com/v1/chat/completions",
-            json={
-                "model": "gpt-4-turbo-preview",
-                "messages": [background, output_format_message, rules, output],
-                "temperature": 0.2,
-                "max_tokens": 2048,
-                "top_p": 1,
-                "frequency_penalty": 0,
-                "presence_penalty": 0
-            }
-        )
-        data = await response.json()
-        return json.loads(data['choices'][0]['message']['content'])
-
-
-async def loop_through_rules(text_to_audit):
-    tasks = [feed_input_to_auditor(text_to_audit, rule) for rule in RULES]
-    responses = await asyncio.gather(*tasks)
-
-    output_json = {
-        "pass": True,
-        "rationale": ""
-    }
-    for json_response in responses:
-        if not json_response.get("pass"):
-            output_json["pass"] = False
-            output_json["rationale"] = json_response.get("rationale")
-            break
-    return output_json
 
 def prepare_messages(input_string, last_message):
     """
