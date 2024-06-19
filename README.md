@@ -50,6 +50,7 @@ Set the following environment variables in your system or virtual environment:
 See the [example.py](example.py) file for a full example on integrating it with your chatbot.
 The high level idea being the user input goes into the input_auditor. If that passes, then the chatbot processes the user input and the output from the chatbot is fed into the output_auditor. Then if that passes you return the chatbot response to the user.
 ![img.png](architecture_diagram.png)
+
 Here's how you can use the Prompt Protector Library in your Python scripts:
 
 ### Output Auditing
