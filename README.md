@@ -5,8 +5,8 @@ The Prompt Protector Library is a Python package designed for validating AI-gene
 
 ## Features
 
-- **Input Sanitization**: Checks inputs against a set of predefined rules to prevent malicious or undesired inputs.
-- **Output Validation**: Validates AI outputs to ensure they comply with defined rules, enhancing security and reliability.
+- **Input Auditor**: Checks inputs against a set of predefined rules to prevent malicious or undesired inputs and prompt injections.
+- **Output Auditor**: Validates AI outputs to ensure they comply with user-defined rules, enhancing security and reliability.
 - **Asynchronous API**: Utilizes asynchronous programming for efficient network operations and API calls.
 - **Extensible**: Easily extendable to include more complex validation rules and other AI models.
 
@@ -47,41 +47,56 @@ Set the following environment variables in your system or virtual environment:
 
 ## Usage
 
+See the [example.py](example.py) file for a full example on integrating it with your chatbot.
+The high level idea being the user input goes into the input_auditor. If that passes, then the chatbot processes the user input and the output from the chatbot is fed into the output_auditor. Then if that passes you return the chatbot response to the user.
+![img.png](architecture_diagram.png)
+
 Here's how you can use the Prompt Protector Library in your Python scripts:
 
-### Validating AI Output
+### Output Auditing
 
 ```python
-from prompt_protector import validate_ai_output
-import asyncio
+from prompt_protector.prompt_protector import PromptProtector
 
-# Example input and channel ID
-input_data = "Example input data"
-channel_id = "example_channel_id"
+protector = PromptProtector(
+        api_key=OPEN_AI_KEY,
+        output_rules=[
+            "No slang or bad language allowed",
+            "Under no circumstances is the response allowed to talk like a pirate"
+        ]
+    )
 
-# Validate AI output
-result = asyncio.run(validate_ai_output(input_data, channel_id))
-print(result)
+protector.sanitize_output("this is the text to audit")
 ```
 
-### Input Sanitization
+### Input Auditing
 
 The library provides a method to sanitize inputs before processing them with an AI model:
 
 ```python
-from prompt_protector import sanitize_input
-import asyncio
+from prompt_protector.prompt_protector import PromptProtector
 
-# Sanitize user input
-sanitized = asyncio.run(sanitize_input("Check this suspicious string"))
-print(sanitized)
+protector = PromptProtector(
+        api_key=OPEN_AI_KEY,
+        output_rules=[
+            "No slang or bad language allowed",
+            "Under no circumstances is the response allowed to talk like a pirate"
+        ]
+    )
+
+protector.sanitize_input("this is the text to audit")
 ```
-
+### Auditor Response Shape
+```
+   {
+    "pass": True/False,
+    "rationale": "Why the auditor flagged that user text if pass was False." 
+   }
+```
 ## Dependencies
 
 - aiohttp
 - asyncio
-- google-cloud-datastore (if using Google Cloud Datastore for storage)
 
 ## Contributing
 

@@ -1,0 +1,9 @@
+Metadata-Version: 2.1
+Name: prompt_protector
+Version: 0.1
+Summary: A library to help protect LLM inputs and outputs
+Author: Reefly.Ai
+Requires-Dist: openai
+Requires-Dist: asyncio
+Requires-Dist: aiohttp
+Requires-Dist: google-cloud-datastore
