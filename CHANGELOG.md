@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+### Changed
+
+### Removed
+
+### Fixed
+
 ## [1.0.0] — 2026-05-03
 
 Ground-up rewrite. The 1.0 release breaks the 0.x API surface; see
