@@ -14,8 +14,8 @@ from __future__ import annotations
 
 import enum
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Optional
 
 from .heuristics import DetectorRegistry, default_registry
 from .types import Category, Match
@@ -42,10 +42,10 @@ class RedactionResult:
 def redact(
     text: str,
     *,
-    registry: Optional[DetectorRegistry] = None,
+    registry: DetectorRegistry | None = None,
     style: RedactionStyle = RedactionStyle.LABELED,
-    categories: Optional[Iterable[Category]] = None,
-    detectors: Optional[Iterable[str]] = None,
+    categories: Iterable[Category] | None = None,
+    detectors: Iterable[str] | None = None,
 ) -> RedactionResult:
     """Run detectors and replace each hit with a placeholder.
 

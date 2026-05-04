@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import Any, Optional
+from typing import Any
 
 from ..backends.base import MissingDependencyError
 from ..types import AuditPrompt, RawJudgement
@@ -27,7 +27,7 @@ class TransformersClassifierAuditor:
         *,
         device: str = "cpu",
         threshold: float = 0.5,
-        unsafe_label: Optional[str] = None,
+        unsafe_label: str | None = None,
         pipeline: Any = None,
     ) -> None:
         self.model = model
@@ -61,10 +61,7 @@ class TransformersClassifierAuditor:
         with self._pipe_lock:
             results = self._pipe(text)
         # transformers returns either list[dict] or list[list[dict]] depending on top_k.
-        if results and isinstance(results[0], list):
-            scores = results[0]
-        else:
-            scores = results
+        scores = results[0] if results and isinstance(results[0], list) else results
 
         # Determine "unsafe" score. If a specific label is configured use it;
         # otherwise pick the max score among labels that look like negative

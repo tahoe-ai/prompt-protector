@@ -25,11 +25,11 @@ import random
 import threading
 import time
 import uuid
+from collections.abc import Iterable, Sequence
 from dataclasses import replace
-from typing import Any, Iterable, Optional, Sequence
+from typing import Any
 
 from . import _otel
-from ._json import JSONParseError
 from ._retry import retry_async
 from .backends.base import Auditor, BatchAuditor
 from .heuristics import DetectorRegistry, default_registry
@@ -41,11 +41,11 @@ from .prompts import (
 from .redaction import RedactionResult, redact, restore
 from .rule_packs import Rule
 from .types import (
+    ENFORCE,
     AuditEvent,
     AuditPrompt,
     AuditResult,
     Category,
-    ENFORCE,
     EventHook,
     FailureMode,
     Match,
@@ -70,8 +70,8 @@ class PromptProtector:
     def __init__(
         self,
         *,
-        auditor: Optional[Auditor] = None,
-        cloud_auditor: Optional[Auditor] = None,
+        auditor: Auditor | None = None,
+        cloud_auditor: Auditor | None = None,
         pre_redactors: Sequence[Any] = (),
         input_rules: Sequence[Any] = (),
         output_rules: Sequence[Any] = (),
@@ -84,11 +84,11 @@ class PromptProtector:
         batch_rules: bool = True,
         max_concurrent_judges: int = _DEFAULT_MAX_CONCURRENT_JUDGES,
         cache: Any = None,
-        on_event: Optional[EventHook] = None,
+        on_event: EventHook | None = None,
         forward_redacted: bool = False,
         vault: Any = None,
         injection_phrases: Iterable[str] = (),
-        detector_registry: Optional[DetectorRegistry] = None,
+        detector_registry: DetectorRegistry | None = None,
     ) -> None:
         if auditor is None and cloud_auditor is None and not pre_redactors:
             raise ValueError(
@@ -134,8 +134,8 @@ class PromptProtector:
         text: str,
         *,
         history: Sequence[Turn] = (),
-        rules: Optional[Sequence[Any]] = None,
-        trace_id: Optional[str] = None,
+        rules: Sequence[Any] | None = None,
+        trace_id: str | None = None,
     ) -> AuditResult:
         return await self._sanitize(
             text=text,
@@ -152,8 +152,8 @@ class PromptProtector:
         text: str,
         *,
         history: Sequence[Turn] = (),
-        rules: Optional[Sequence[Any]] = None,
-        trace_id: Optional[str] = None,
+        rules: Sequence[Any] | None = None,
+        trace_id: str | None = None,
     ) -> AuditResult:
         return await self._sanitize(
             text=text,
@@ -194,7 +194,7 @@ class PromptProtector:
         rules: list[Rule],
         rules_overridden: bool,
         system: str,
-        trace_id: Optional[str],
+        trace_id: str | None,
     ) -> AuditResult:
         trace_id = trace_id or uuid.uuid4().hex
         start = time.monotonic()
@@ -262,7 +262,7 @@ class PromptProtector:
         # --- 3. local pre-redactors
         redacted_text = text
         all_matches: list[Match] = list(heur_matches)
-        vault_id: Optional[str] = None
+        vault_id: str | None = None
         for redactor in self._pre_redactors:
             r = redactor.redact(redacted_text)
             redacted_text = r.redacted_text
@@ -284,7 +284,7 @@ class PromptProtector:
         text_for_audit = redacted_text if self._forward_redacted else text
 
         # --- 4. cache lookup (only when caching is configured)
-        cache_key: Optional[str] = None
+        cache_key: str | None = None
         if self._cache is not None:
             cache_key = self._cache_key(kind, text_for_audit, rules, rules_overridden)
             try:
@@ -383,7 +383,7 @@ class PromptProtector:
         history: tuple[Turn, ...],
         rules: list[Rule],
         system: str,
-    ) -> "_Judgement":
+    ) -> _Judgement:
         try:
             if not rules:
                 judged = await self._call_with_policy(
@@ -421,7 +421,7 @@ class PromptProtector:
                         system_instructions=BATCHED_OUTPUT_AUDITOR_SYSTEM,
                     )
                 )
-                for rule, j in zip(rules, judgements):
+                for rule, j in zip(rules, judgements, strict=False):
                     if not j.passed:
                         return _Judgement(
                             provider=auditor.name,
@@ -454,10 +454,10 @@ class PromptProtector:
         text: str,
         history: tuple[Turn, ...],
         system: str,
-    ) -> "_Judgement":
+    ) -> _Judgement:
         sem = asyncio.Semaphore(self._max_concurrent_judges)
         succeeded = 0
-        last_exc: Optional[BaseException] = None
+        last_exc: BaseException | None = None
 
         async def judge_one(rule: Rule):
             async with sem:
@@ -534,11 +534,11 @@ class PromptProtector:
 
     def _apply_failure_mode(
         self,
-        fail: "_AuditorFailure",
+        fail: _AuditorFailure,
         *,
         matches: list[Match],
-        redacted_text: Optional[str],
-        vault_id: Optional[str],
+        redacted_text: str | None,
+        vault_id: str | None,
         verdicts: list[StageVerdict],
         start: float,
         trace_id: str,
@@ -610,10 +610,10 @@ class PromptProtector:
         trace_id: str,
         provider: str,
         score: float = 0.0,
-        category: Optional[Category] = None,
-        matches: Optional[list[Match]] = None,
-        redacted_text: Optional[str] = None,
-        vault_id: Optional[str] = None,
+        category: Category | None = None,
+        matches: list[Match] | None = None,
+        redacted_text: str | None = None,
+        vault_id: str | None = None,
         degraded: bool = False,
     ) -> AuditResult:
         return AuditResult(
@@ -661,7 +661,7 @@ class PromptProtector:
             )
         return hashlib.sha256((prefix + text).encode("utf-8")).hexdigest()
 
-    async def _cache_store(self, key: Optional[str], result: AuditResult) -> None:
+    async def _cache_store(self, key: str | None, result: AuditResult) -> None:
         if key is None or self._cache is None:
             return
         try:
@@ -671,7 +671,7 @@ class PromptProtector:
 
     # --- event emission ------------------------------------------------
 
-    def _emit(self, kind: str, result: AuditResult, error: Optional[str] = None) -> None:
+    def _emit(self, kind: str, result: AuditResult, error: str | None = None) -> None:
         if self._on_event is None:
             return
         try:
@@ -697,21 +697,21 @@ class PromptProtector:
     # ------------------------------------------------------------------
 
     @classmethod
-    def from_config(cls, path: str) -> "PromptProtector":
+    def from_config(cls, path: str) -> PromptProtector:
         from .config import build_protector, load_config_file
 
         cfg = load_config_file(path)
         return build_protector(cfg)
 
     @classmethod
-    def from_config_dict(cls, data: dict) -> "PromptProtector":
+    def from_config_dict(cls, data: dict) -> PromptProtector:
         from .config import build_protector, load_config_dict
 
         cfg = load_config_dict(data)
         return build_protector(cfg)
 
     @classmethod
-    def from_config_env(cls, env_var: str = "PROMPT_PROTECTOR_CONFIG") -> "PromptProtector":
+    def from_config_env(cls, env_var: str = "PROMPT_PROTECTOR_CONFIG") -> PromptProtector:
         import json
         import os
 
@@ -749,7 +749,7 @@ class _Judgement:
         self.degraded = degraded
 
 
-def _normalize_rules(rules: Optional[Sequence[Any]]) -> list[Rule]:
+def _normalize_rules(rules: Sequence[Any] | None) -> list[Rule]:
     if not rules:
         return []
     out: list[Rule] = []
@@ -761,12 +761,12 @@ def _normalize_rules(rules: Optional[Sequence[Any]]) -> list[Rule]:
         else:
             try:
                 out.extend(_normalize_rules(list(item)))
-            except TypeError:
-                raise TypeError(f"unsupported rule type: {type(item).__name__}")
+            except TypeError as exc:
+                raise TypeError(f"unsupported rule type: {type(item).__name__}") from exc
     return out
 
 
-def _consider_heuristic_block(matches: list[Match]) -> Optional[Match]:
+def _consider_heuristic_block(matches: list[Match]) -> Match | None:
     if not matches:
         return None
     blocking = [m for m in matches if m.score >= 0.85]
@@ -790,8 +790,8 @@ class _SyncRunner:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._loop: Optional[asyncio.AbstractEventLoop] = None
-        self._thread: Optional[threading.Thread] = None
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._thread: threading.Thread | None = None
 
     def submit(self, coro, timeout: float):
         loop = self._ensure_loop()

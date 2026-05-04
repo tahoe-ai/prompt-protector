@@ -7,8 +7,7 @@ guardian``, custom). Network-local only — no internet egress.
 
 from __future__ import annotations
 
-import json
-from typing import Any, Optional
+from typing import Any
 
 from .._json import parse_json_object
 from ..backends.base import MissingDependencyError
@@ -26,7 +25,7 @@ class OllamaAuditor:
         host: str = "http://localhost:11434",
         timeout_s: float = 30.0,
         client: Any = None,
-        options: Optional[dict] = None,
+        options: dict | None = None,
     ) -> None:
         self.model = model
         self._host = host.rstrip("/")

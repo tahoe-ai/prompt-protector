@@ -20,16 +20,16 @@ from .rule_packs import (
     RulePack,
 )
 from .types import (
+    ENFORCE,
+    SHADOW,
     Action,
     AuditEvent,
     AuditResult,
     Category,
     Direction,
-    ENFORCE,
     FailureMode,
     Match,
     Mode,
-    SHADOW,
     StageVerdict,
     Turn,
 )

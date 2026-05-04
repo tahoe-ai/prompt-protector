@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Awaitable, Optional, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from ..types import AuditPrompt, Match, RawJudgement
 

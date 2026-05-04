@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from typing import Sequence
+from collections.abc import Sequence
 
 from .heuristics import DetectorRegistry, default_registry
 from .redaction import RedactionStyle, redact

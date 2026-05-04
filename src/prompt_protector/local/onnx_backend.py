@@ -8,11 +8,11 @@ attention_mask).
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ..backends.base import MissingDependencyError
 from ..types import AuditPrompt, RawJudgement
-
 
 Tokenizer = Callable[[str], dict[str, Any]]
 
@@ -27,7 +27,7 @@ class ONNXClassifierAuditor:
         *,
         threshold: float = 0.5,
         unsafe_index: int = 1,
-        providers: Optional[list[str]] = None,
+        providers: list[str] | None = None,
         session: Any = None,
     ) -> None:
         self.model = model_path

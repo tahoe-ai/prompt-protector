@@ -10,8 +10,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass, field
-from typing import Any, Optional
-
+from typing import Any
 
 # ---------------------------------------------------------------------------
 # Config dataclasses
@@ -21,10 +20,10 @@ from typing import Any, Optional
 @dataclass
 class ProviderConfig:
     kind: str  # "openai" | "anthropic" | "ollama" | "transformers" | "llamacpp" | "onnx" | "mock"
-    model: Optional[str] = None
-    api_key_env: Optional[str] = None
-    api_key: Optional[str] = None
-    host: Optional[str] = None
+    model: str | None = None
+    api_key_env: str | None = None
+    api_key: str | None = None
+    host: str | None = None
     device: str = "cpu"
     threshold: float = 0.5
     extras: dict[str, Any] = field(default_factory=dict)
@@ -32,9 +31,9 @@ class ProviderConfig:
 
 @dataclass
 class ProvidersConfig:
-    primary: Optional[ProviderConfig] = None
-    secondary: Optional[ProviderConfig] = None
-    fallback: Optional[ProviderConfig] = None
+    primary: ProviderConfig | None = None
+    secondary: ProviderConfig | None = None
+    fallback: ProviderConfig | None = None
     policy: str = "primary_only"  # primary_only | any_must_pass | all_must_pass
 
 
@@ -55,13 +54,13 @@ class CustomRegexRule:
     pattern: str
     action: str = "redact"
     apply_to: list[str] = field(default_factory=lambda: ["input", "output"])
-    replacement: Optional[str] = None
+    replacement: str | None = None
 
 
 @dataclass
 class OutputSchemaConfig:
     enabled: bool = False
-    schema_path: Optional[str] = None
+    schema_path: str | None = None
 
 
 @dataclass
@@ -87,7 +86,7 @@ class CacheConfig:
 @dataclass
 class LoggingConfig:
     level: str = "INFO"
-    audit_log_path: Optional[str] = None
+    audit_log_path: str | None = None
 
 
 @dataclass
@@ -474,7 +473,7 @@ def _route(rule, apply_to: list[str], input_rules: list, output_rules: list) -> 
         output_rules.append(rule)
 
 
-def _build_auditor(p: Optional[ProviderConfig]):
+def _build_auditor(p: ProviderConfig | None):
     if p is None:
         return None
     api_key = p.api_key
@@ -516,8 +515,8 @@ def _build_pre_redactor(p: PreRedactorConfig):
     if p.kind == "regex_pack":
         # Built-in heuristics already handle this; return a thin adapter.
         from .heuristics import default_registry
-        from .redaction import redact as redact_fn
         from .local.base import LocalRedactionResult
+        from .redaction import redact as redact_fn
 
         class _RegexAdapter:
             name = "regex_pack"

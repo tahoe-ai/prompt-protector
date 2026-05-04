@@ -8,10 +8,9 @@ alias because some 0.x deployments still use it.
 from __future__ import annotations
 
 import os
-from typing import Optional
 
 
-def _first_env(*names: str) -> Optional[str]:
+def _first_env(*names: str) -> str | None:
     for name in names:
         value = os.getenv(name)
         if value:
