@@ -1,0 +1,42 @@
+# Fully on-prem — no cloud auditor, no internet egress.
+# Heuristics + Presidio for PII redaction, plus a local transformers
+# classifier for prompt-injection / unsafe-content judgement.
+
+version: 1
+
+defaults:
+  failure_mode: fail_closed
+  mode: enforce
+  forward_redacted: true        # downstream LLM sees only redacted text
+
+pre_redactors:
+  - kind: presidio
+    entities: [US_SSN, CREDIT_CARD, EMAIL_ADDRESS, PHONE_NUMBER, PERSON, US_BANK_NUMBER]
+    operator: replace
+  - kind: regex_pack
+
+auditor:
+  primary:
+    kind: transformers
+    model: ProtectAI/deberta-v3-base-prompt-injection-v2
+    device: cpu
+    threshold: 0.85
+
+prevent:
+  pii:
+    enabled: true
+    types: [ssn, credit_card, email, phone]
+    action: redact
+    apply_to: [input, output]
+  secrets:
+    enabled: true
+    action: block
+    apply_to: [input, output]
+  prompt_injection:
+    enabled: true
+    action: block
+    apply_to: [input]
+
+cache:
+  enabled: true
+  backend: memory
