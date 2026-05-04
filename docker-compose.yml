@@ -1,0 +1,72 @@
+# docker-compose for local development and on-prem deployments.
+#
+# Two profiles:
+#   default          → cloud auditor (OpenAI / Anthropic). Needs API keys.
+#   local-only       → fully on-prem with Ollama as the local judge.
+#
+# Run:
+#   docker compose up                        # default
+#   docker compose --profile local-only up   # adds Ollama service
+
+services:
+  protector:
+    build:
+      context: .
+      args:
+        PROTECTOR_EXTRAS: server,openai,anthropic,yaml
+    image: prompt-protector:latest
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      PROMPT_PROTECTOR_CONFIG: /etc/prompt-protector/config.yaml
+      PROMPT_PROTECTOR_LOG_LEVEL: info
+    volumes:
+      # Mount your config over the baked-in default. Read-only is good practice.
+      - ./examples/protector.yaml:/etc/prompt-protector/config.yaml:ro
+    healthcheck:
+      test: ["CMD", "python", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/v1/healthz', timeout=3).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ---- Optional: fully local stack ----
+  protector-local:
+    profiles: ["local-only"]
+    build:
+      context: .
+      args:
+        PROTECTOR_EXTRAS: server,yaml,ollama
+    image: prompt-protector:local-only
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      PROMPT_PROTECTOR_CONFIG: /etc/prompt-protector/config.yaml
+    volumes:
+      - ./examples/protector_local_only.yaml:/etc/prompt-protector/config.yaml:ro
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  ollama:
+    profiles: ["local-only"]
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  ollama-data:
