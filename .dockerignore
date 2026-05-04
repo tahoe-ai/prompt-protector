@@ -1,0 +1,47 @@
+.git
+.gitignore
+.github/
+.venv/
+venv/
+env/
+
+# Python build artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.eggs/
+.tox/
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local-only
+.env
+.env.*
+!.env.example
+*.local.yaml
+prompt-protector-audit.jsonl
+
+# Tests don't ship in the image
+tests/
+
+# Image's own infra
+Dockerfile
+docker-compose.yml
+.dockerignore
