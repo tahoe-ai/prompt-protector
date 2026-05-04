@@ -1,0 +1,89 @@
+version: 1
+
+defaults:
+  failure_mode: fail_closed     # fail_closed | fail_open
+  mode: enforce                 # enforce | shadow | sample
+  sample_rate: 1.0              # only meaningful when mode == sample
+  max_input_chars: 8000
+  on_oversize: reject           # reject | truncate
+  forward_redacted: false       # if true, downstream LLM sees the redacted text
+  batch_rules: true
+  timeout_s: 10.0
+  max_retries: 3
+
+# Cloud auditor — primary + optional secondary for dual-vote.
+auditor:
+  primary:
+    kind: openai
+    model: gpt-4o-mini
+    api_key_env: OPENAI_API_KEY
+  secondary:
+    kind: anthropic
+    model: claude-haiku-4-5-20251001
+    api_key_env: ANTHROPIC_API_KEY
+  policy: any_must_pass         # primary_only | any_must_pass | all_must_pass
+
+# Local pre-redactors run BEFORE the cloud auditor and BEFORE the downstream
+# LLM (when forward_redacted: true). This is the privacy lever — sensitive
+# data never leaves your infra in raw form.
+pre_redactors:
+  - kind: presidio
+    entities: [US_SSN, CREDIT_CARD, EMAIL_ADDRESS, PHONE_NUMBER, PERSON]
+    score_threshold: 0.4
+    operator: replace
+  - kind: regex_pack            # built-in regex heuristics (no model download)
+
+# Declare what kinds of data the protector should prevent.
+prevent:
+  pii:
+    enabled: true
+    types: [ssn, credit_card, email, phone, postal_address, date_of_birth, ip_address]
+    action: redact              # block | redact | log
+    apply_to: [input, output]
+    severity_threshold: 0.5
+
+  secrets:
+    enabled: true
+    types: [aws_access_key, github_token, slack_token, jwt, openai_key, anthropic_key, ssh_private_key, generic_high_entropy]
+    action: block
+    apply_to: [input, output]
+
+  prompt_injection:
+    enabled: true
+    action: block
+    apply_to: [input]
+    extra_phrases:              # added to the built-in injection corpus
+      - "ignore the rules above"
+      - "developer mode"
+
+  nsfw:
+    enabled: false
+
+  off_topic:
+    enabled: true
+    action: log
+    apply_to: [output]
+    rules:                      # natural-language rules sent to the LLM auditor
+      - "Output must relate to home insurance products."
+      - "Output must not discuss competitor pricing."
+
+  custom_regex:
+    - name: internal_ticket_id
+      pattern: "INC-\\d{6}"
+      action: redact
+      apply_to: [output]
+      replacement: "[REDACTED:TICKET]"
+
+  output_schema:
+    enabled: false
+    schema_path: ./schemas/response.json
+
+cache:
+  enabled: true
+  backend: memory               # memory | redis
+  ttl_seconds: 600
+  max_entries: 10000
+
+logging:
+  level: INFO
+  audit_log_path: ./prompt-protector-audit.jsonl
