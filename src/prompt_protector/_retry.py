@@ -9,7 +9,8 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-from typing import Awaitable, Callable, TypeVar
+from collections.abc import Awaitable, Callable
+from typing import TypeVar
 
 T = TypeVar("T")
 
@@ -38,9 +39,7 @@ def is_transient(exc: BaseException) -> bool:
     if name in _TRANSIENT_EXC_NAMES:
         return True
     status = getattr(exc, "status_code", None) or getattr(exc, "status", None)
-    if isinstance(status, int) and (status >= 500 or status == 429):
-        return True
-    return False
+    return isinstance(status, int) and (status >= 500 or status == 429)
 
 
 async def retry_async(

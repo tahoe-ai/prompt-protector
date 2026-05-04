@@ -6,12 +6,11 @@ Runs entirely locally — no calls to Microsoft. Wraps ``presidio-analyzer``
 
 from __future__ import annotations
 
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
-from ..types import Category, Match
 from ..backends.base import MissingDependencyError
+from ..types import Category, Match
 from .base import LocalRedactionResult
-
 
 _DEFAULT_ENTITIES = (
     "PERSON",
@@ -39,10 +38,10 @@ class PresidioRedactor:
         reversible: bool = False,
         analyzer: object = None,
         anonymizer: object = None,
-        custom_recognizers: Optional[list[dict]] = None,
+        custom_recognizers: list[dict] | None = None,
     ) -> None:
         try:
-            from presidio_analyzer import AnalyzerEngine, PatternRecognizer, Pattern  # type: ignore
+            from presidio_analyzer import AnalyzerEngine, Pattern, PatternRecognizer  # type: ignore
             from presidio_anonymizer import AnonymizerEngine  # type: ignore
             from presidio_anonymizer.entities import OperatorConfig  # type: ignore
         except ImportError as exc:  # pragma: no cover

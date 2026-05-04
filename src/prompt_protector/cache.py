@@ -15,7 +15,7 @@ import threading
 import time
 from collections import OrderedDict
 from dataclasses import asdict, replace
-from typing import Any, Optional, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from .types import (
     AuditResult,
@@ -29,7 +29,7 @@ log = logging.getLogger("prompt_protector")
 
 @runtime_checkable
 class Cache(Protocol):
-    async def get(self, key: str) -> Optional[AuditResult]: ...
+    async def get(self, key: str) -> AuditResult | None: ...
 
     async def set(self, key: str, value: AuditResult) -> None: ...
 
@@ -47,10 +47,10 @@ class InMemoryLRUCache:
     def __init__(self, *, max_entries: int = 10_000, ttl_seconds: float = 600.0) -> None:
         self._max = max_entries
         self._ttl = ttl_seconds
-        self._items: "OrderedDict[str, tuple[float, AuditResult]]" = OrderedDict()
+        self._items: OrderedDict[str, tuple[float, AuditResult]] = OrderedDict()
         self._lock = threading.Lock()
 
-    async def get(self, key: str) -> Optional[AuditResult]:
+    async def get(self, key: str) -> AuditResult | None:
         with self._lock:
             entry = self._items.get(key)
             if entry is None:
@@ -105,7 +105,7 @@ class RedisCache:
         self._prefix = prefix
         self._ttl = ttl_seconds
 
-    async def get(self, key: str) -> Optional[AuditResult]:  # pragma: no cover - integration
+    async def get(self, key: str) -> AuditResult | None:  # pragma: no cover - integration
         raw = await self._redis.get(self._prefix + key)
         if raw is None:
             return None

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, Optional
+from collections.abc import Iterable
 
 from ..backends.base import MissingDependencyError
 from ..types import Category, Match
@@ -17,7 +17,7 @@ class SpacyNERRedactor:
         *,
         model: str = "en_core_web_sm",
         entities: Iterable[str] = ("PERSON", "ORG", "GPE", "LOC"),
-        nlp: Optional[object] = None,
+        nlp: object | None = None,
     ) -> None:
         if nlp is not None:
             self._nlp = nlp

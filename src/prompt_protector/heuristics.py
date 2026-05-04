@@ -12,9 +12,10 @@ import logging
 import re
 import unicodedata
 from collections import Counter
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from math import log2
-from typing import Callable, Iterable, Optional, Pattern
+from re import Pattern
 
 from .types import Category, Match, make_match
 
@@ -43,7 +44,7 @@ class DetectorRegistry:
 
     detectors: list[Detector] = field(default_factory=list)
 
-    def add(self, detector: Detector) -> "DetectorRegistry":
+    def add(self, detector: Detector) -> DetectorRegistry:
         self.detectors.append(detector)
         return self
 
@@ -79,8 +80,8 @@ def _matches_from_pattern(
     detector: str,
     category: Category,
     score: float = 1.0,
-    validator: Optional[Callable[[str], bool]] = None,
-    replacement_template: Optional[str] = None,
+    validator: Callable[[str], bool] | None = None,
+    replacement_template: str | None = None,
 ) -> list[Match]:
     out: list[Match] = []
     for m in pattern.finditer(text):

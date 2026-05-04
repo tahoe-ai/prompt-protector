@@ -9,8 +9,9 @@ from __future__ import annotations
 import enum
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Iterable, Optional
+from typing import Any
 
 
 class FailureMode(str, enum.Enum):
@@ -58,15 +59,15 @@ class Mode:
     sample_rate: float = 1.0
 
     @classmethod
-    def enforce(cls) -> "Mode":
+    def enforce(cls) -> Mode:
         return cls(kind="enforce", sample_rate=1.0)
 
     @classmethod
-    def shadow(cls) -> "Mode":
+    def shadow(cls) -> Mode:
         return cls(kind="shadow", sample_rate=1.0)
 
     @classmethod
-    def sample(cls, p: float) -> "Mode":
+    def sample(cls, p: float) -> Mode:
         if not 0.0 <= p <= 1.0:
             raise ValueError(f"sample rate must be in [0,1], got {p}")
         return cls(kind="sample", sample_rate=p)
@@ -85,7 +86,7 @@ class Match:
     category: Category
     span: tuple[int, int]
     original: str
-    replacement: Optional[str] = None
+    replacement: str | None = None
     score: float = 1.0
 
 
@@ -103,18 +104,18 @@ class AuditResult:
 
     passed: bool
     score: float = 0.0
-    category: Optional[Category] = None
+    category: Category | None = None
     rationale: str = ""
-    rule_id: Optional[str] = None
+    rule_id: str | None = None
     matches: list[Match] = field(default_factory=list)
-    redacted_text: Optional[str] = None
-    vault_id: Optional[str] = None
+    redacted_text: str | None = None
+    vault_id: str | None = None
     provider: str = ""
     model: str = ""
     latency_ms: int = 0
     degraded: bool = False
-    trace_id: Optional[str] = None
-    verdicts: list["StageVerdict"] = field(default_factory=list)
+    trace_id: str | None = None
+    verdicts: list[StageVerdict] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -126,7 +127,7 @@ class StageVerdict:
 
     stage: str
     passed: bool
-    category: Optional[Category]
+    category: Category | None
     rationale: str
     score: float = 0.0
     latency_ms: int = 0
@@ -138,14 +139,14 @@ class AuditEvent:
 
     kind: str  # "input" | "output" | "stream" | "config_reload"
     passed: bool
-    category: Optional[Category]
-    rule_id: Optional[str]
+    category: Category | None
+    rule_id: str | None
     provider: str
     model: str
     latency_ms: int
     degraded: bool
-    trace_id: Optional[str]
-    error: Optional[str] = None
+    trace_id: str | None
+    error: str | None = None
     timestamp: float = field(default_factory=time.time)
     event_id: str = field(default_factory=lambda: uuid.uuid4().hex)
 
@@ -182,7 +183,7 @@ def make_match(
     category: Category,
     span: tuple[int, int],
     original: str,
-    replacement: Optional[str] = None,
+    replacement: str | None = None,
     score: float = 1.0,
 ) -> Match:
     return Match(

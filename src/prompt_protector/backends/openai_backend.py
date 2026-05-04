@@ -8,7 +8,7 @@ sticks to JSON output reliably.
 from __future__ import annotations
 
 import os
-from typing import Any, Optional
+from typing import Any
 
 from .._json import parse_json_object
 from ..prompts import (
@@ -30,13 +30,13 @@ class OpenAIAuditor:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         *,
         model: str = "gpt-4o-mini",
         temperature: float = 0.0,
         max_tokens: int = 512,
         client: Any = None,
-        base_url: Optional[str] = None,
+        base_url: str | None = None,
     ) -> None:
         if AsyncOpenAI is None:
             raise MissingDependencyError("OpenAIAuditor", "openai", "openai")

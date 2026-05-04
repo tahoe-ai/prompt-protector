@@ -27,7 +27,6 @@ from prompt_protector.heuristics import detect_credit_card, detect_ssn
 from prompt_protector.redaction import RedactionStyle, redact, restore
 from prompt_protector.types import Match, StageVerdict
 
-
 # ---------------------------------------------------------------------------
 # Bug 1 — CancelledError must propagate, not be swallowed into AuditResult.
 # ---------------------------------------------------------------------------

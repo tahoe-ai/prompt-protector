@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from prompt_protector import default_registry
 from prompt_protector.heuristics import (
     detect_anthropic_key,

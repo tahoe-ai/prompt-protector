@@ -7,13 +7,11 @@ import asyncio
 import pytest
 
 from prompt_protector import (
-    AuditResult,
+    PII,
     Category,
     DualVoteAuditor,
     FailureMode,
     MockAuditor,
-    Mode,
-    PII,
     PromptProtector,
     Rule,
     Turn,

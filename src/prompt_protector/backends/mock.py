@@ -10,7 +10,8 @@ Two construction modes:
 
 from __future__ import annotations
 
-from typing import Any, Callable, Optional
+from collections.abc import Callable
+from typing import Any
 
 from ..types import AuditPrompt, RawJudgement
 
@@ -21,10 +22,10 @@ class MockAuditor:
     def __init__(
         self,
         *,
-        judge_fn: Optional[Callable[[AuditPrompt], Any]] = None,
-        fail_substrings: Optional[list[str]] = None,
+        judge_fn: Callable[[AuditPrompt], Any] | None = None,
+        fail_substrings: list[str] | None = None,
         model: str = "mock-1",
-        raise_on_call: Optional[BaseException] = None,
+        raise_on_call: BaseException | None = None,
         delay_s: float = 0.0,
     ) -> None:
         self.model = model

@@ -7,8 +7,8 @@ the optional dependency is missing.
 
 from .base import (
     LocalAuditor,
-    LocalRedactor,
     LocalRedactionResult,
+    LocalRedactor,
     RedactionVault,
 )
 from .vault import EncryptedFileVault, InMemoryVault

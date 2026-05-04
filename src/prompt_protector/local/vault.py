@@ -17,7 +17,6 @@ import json
 import os
 import threading
 import time
-from typing import Optional
 
 
 class InMemoryVault:
@@ -89,9 +88,8 @@ class EncryptedFileVault:
     def put(self, vault_id: str, mapping: list[tuple[str, str]]) -> None:
         payload = json.dumps({"expires_at": time.time() + self._ttl, "mapping": mapping}).encode()
         token = self._fernet.encrypt(payload)
-        with self._lock:
-            with open(os.path.join(self._dir, _safe(vault_id)), "wb") as fh:
-                fh.write(token)
+        with self._lock, open(os.path.join(self._dir, _safe(vault_id)), "wb") as fh:
+            fh.write(token)
 
     def get(self, vault_id: str) -> list[tuple[str, str]]:
         path = os.path.join(self._dir, _safe(vault_id))

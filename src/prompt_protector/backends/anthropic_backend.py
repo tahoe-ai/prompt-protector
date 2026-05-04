@@ -8,7 +8,7 @@ for structured output).
 from __future__ import annotations
 
 import os
-from typing import Any, Optional
+from typing import Any
 
 from .._json import parse_json_object
 from ..prompts import (
@@ -30,7 +30,7 @@ class AnthropicAuditor:
 
     def __init__(
         self,
-        api_key: Optional[str] = None,
+        api_key: str | None = None,
         *,
         model: str = "claude-haiku-4-5-20251001",
         max_tokens: int = 512,

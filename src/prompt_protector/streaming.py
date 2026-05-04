@@ -18,8 +18,8 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import AsyncIterable, AsyncIterator, Sequence
 from dataclasses import dataclass
-from typing import AsyncIterable, AsyncIterator, Optional, Sequence, Union
 
 from .heuristics import DetectorRegistry
 from .protector import PromptProtector
@@ -31,7 +31,7 @@ class StreamViolation:
     """Yielded once when the protector decides to abort a stream."""
 
     rationale: str
-    category: Optional[Category]
+    category: Category | None
     matches: list[Match]
     audited_so_far: str
 
@@ -72,13 +72,13 @@ async def sanitize_stream(
     protector: PromptProtector,
     upstream: AsyncIterable[str],
     *,
-    rules: Optional[Sequence] = None,
+    rules: Sequence | None = None,
     history: Sequence[Turn] = (),
     audit_every_chars: int = 256,
     sliding_window_chars: int = 1024,
-    registry: Optional[DetectorRegistry] = None,
-    trace_id: Optional[str] = None,
-) -> AsyncIterator[Union[str, StreamViolation]]:
+    registry: DetectorRegistry | None = None,
+    trace_id: str | None = None,
+) -> AsyncIterator[str | StreamViolation]:
     """Pass-through chunks while running heuristics + sliding-window audits.
 
     Heuristic hits abort immediately. LLM audits run in the background on
@@ -93,7 +93,7 @@ async def sanitize_stream(
     audit_buf = _RollingBuffer(sliding_window_chars)
     full_text: list[str] = []  # only kept for the final audit + violation context
     chars_since_audit = 0
-    pending_audit: Optional[asyncio.Task[AuditResult]] = None
+    pending_audit: asyncio.Task[AuditResult] | None = None
 
     upstream_iter = upstream.__aiter__()
 
@@ -191,7 +191,7 @@ async def sanitize_stream(
             pending_audit.cancel()
 
 
-def _consume_audit_task(task: asyncio.Task[AuditResult]) -> Optional[AuditResult]:
+def _consume_audit_task(task: asyncio.Task[AuditResult]) -> AuditResult | None:
     """Read a finished audit task without leaking CancelledError.
 
     A task that finished by being cancelled is not a real "verdict" — treat

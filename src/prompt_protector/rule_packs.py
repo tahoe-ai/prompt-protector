@@ -12,8 +12,8 @@ Compose:
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Iterable, Iterator
+from collections.abc import Iterable, Iterator
+from dataclasses import dataclass
 
 from .types import Category
 
@@ -39,7 +39,7 @@ class RulePack:
     def __len__(self) -> int:
         return len(self.rules)
 
-    def with_extra(self, extra: Iterable[Rule]) -> "RulePack":
+    def with_extra(self, extra: Iterable[Rule]) -> RulePack:
         return RulePack(name=self.name, rules=tuple(self.rules) + tuple(extra))
 
 

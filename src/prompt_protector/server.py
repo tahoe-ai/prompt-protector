@@ -21,7 +21,6 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import asdict
-from typing import Optional
 
 try:
     from fastapi import FastAPI, HTTPException
@@ -53,8 +52,8 @@ class TurnIn(BaseModel):
 class SanitizeRequest(BaseModel):
     text: str
     history: list[TurnIn] = Field(default_factory=list)
-    trace_id: Optional[str] = None
-    rules: Optional[list[str]] = None
+    trace_id: str | None = None
+    rules: list[str] | None = None
 
 
 class RedactRequest(BaseModel):
@@ -63,7 +62,7 @@ class RedactRequest(BaseModel):
 
 class ReloadResponse(BaseModel):
     reloaded: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
 # ---------------------------------------------------------------------------

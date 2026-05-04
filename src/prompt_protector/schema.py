@@ -10,16 +10,16 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any
 
 
 @dataclass(frozen=True)
 class SchemaCheckResult:
     passed: bool
-    error: Optional[str] = None
+    error: str | None = None
 
 
-SchemaLike = Union[dict, type, Any]
+SchemaLike = dict | type | Any
 
 
 def check_output_schema(text: str, schema: SchemaLike) -> SchemaCheckResult:
